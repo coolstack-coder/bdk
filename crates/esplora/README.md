@@ -21,26 +21,32 @@ the parent transactions before relying on these figures.
 
 ## Usage
 
+The `default` features enable both the blocking and async clients (`blocking-https` and
+`async-https`). To select only one of them, disable the default features and pick the ones
+you need.
+
 For blocking-only:
 ```toml
-bdk_esplora = { version = "0.19", features = ["blocking"] }
+bdk_esplora = { version = "0.22", default-features = false, features = ["std", "blocking"] }
 ```
 
 For async-only:
 ```toml
-bdk_esplora = { version = "0.19", features = ["async"] }
+bdk_esplora = { version = "0.22", default-features = false, features = ["std", "async"] }
 ```
 
 For async-only (with https):
 
-You can additionally specify to use either rustls or native-tls, e.g. `async-https-native`, and this applies to both async and blocking features.
+You can additionally specify to use either rustls or native-tls, e.g. `async-https-rustls` or
+`async-https-native`. The blocking client has the equivalent `blocking-https`,
+`blocking-https-rustls` and `blocking-https-native` features.
 ```toml
-bdk_esplora = { version = "0.19", features = ["async-https"] }
+bdk_esplora = { version = "0.22", default-features = false, features = ["std", "async-https"] }
 ```
 
 For async-only (with tokio):
 ```toml
-bdk_esplora = { version = "0.19", features = ["async", "tokio"] }
+bdk_esplora = { version = "0.22", default-features = false, features = ["std", "async", "tokio"] }
 ```
 
 To use the extension traits:
