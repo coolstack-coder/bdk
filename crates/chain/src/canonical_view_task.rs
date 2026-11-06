@@ -41,7 +41,10 @@ pub struct CanonicalViewTask<'g, A> {
     /// Transactions that need anchor verification (transitively anchored).
     unprocessed_anchor_checks: VecDeque<(Txid, &'g BTreeSet<A>)>,
 
-    /// Resolved direct anchors for transitively anchored transactions.
+    /// Direct anchors that are known to be in the best chain.
+    ///
+    /// Seeded with the anchors of directly anchored transactions (already verified during
+    /// canonicalization), then extended with the results of `unprocessed_anchor_checks`.
     direct_anchors: HashMap<Txid, A>,
 
     current_stage: ViewStage,
@@ -62,9 +65,21 @@ impl<'g, A: Anchor> CanonicalViewTask<'g, A> {
         let all_anchors = tx_graph.all_anchors();
 
         let mut unprocessed_anchor_checks = VecDeque::new();
+        let mut direct_anchors = HashMap::new();
         for txid in &order {
             if let Some((_, reason)) = txs.get(txid) {
                 if matches!(reason, CanonicalReason::ObservedIn { .. }) {
+                    continue;
+                }
+                // The anchor of a directly anchored tx was already confirmed to be in the best
+                // chain during canonicalization. Record it so that an assumed-canonical ancestor
+                // can be confirmed transitively through this tx in `finish`.
+                if let CanonicalReason::Anchor {
+                    anchor,
+                    descendant: None,
+                } = reason
+                {
+                    direct_anchors.insert(*txid, anchor.clone());
                     continue;
                 }
                 if reason.is_transitive() || reason.is_assumed() {
@@ -82,7 +97,7 @@ impl<'g, A: Anchor> CanonicalViewTask<'g, A> {
             canonical_txs: txs,
             spends,
             unprocessed_anchor_checks,
-            direct_anchors: HashMap::new(),
+            direct_anchors,
             current_stage: ViewStage::default(),
         }
     }
