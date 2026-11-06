@@ -188,3 +188,86 @@ fn test_assumed_canonical_scenarios() {
         );
     }
 }
+
+#[test]
+fn test_assumed_canonical_parent_of_directly_anchored_child() {
+    // scenario: "txB spends txA; txB is anchored; txA is assumed canonical"
+    //
+    // txA has no anchor of its own, but its child txB is confirmed in the best chain, so txA must
+    // be confirmed transitively by txB.
+    let scenario = "txB spends txA; txB is anchored; txA is assumed canonical";
+
+    let local_chain = local_chain![
+        (0, hash!("genesis")),
+        (1, hash!("block1")),
+        (2, hash!("block2")),
+        (3, hash!("block3")),
+        (4, hash!("block4")),
+        (5, hash!("block5"))
+    ];
+    let chain_tip = local_chain.tip().block_id();
+
+    let tx_templates = [
+        TxTemplate {
+            tx_name: "txA",
+            inputs: &[TxInTemplate::Bogus],
+            outputs: &[TxOutTemplate::new(100000, Some(0))],
+            anchors: &[],
+            last_seen: None,
+            assume_canonical: true,
+        },
+        TxTemplate {
+            tx_name: "txB",
+            inputs: &[TxInTemplate::PrevTx("txA", 0)],
+            outputs: &[TxOutTemplate::new(50000, Some(0))],
+            anchors: &[block_id!(5, "block5")],
+            last_seen: None,
+            assume_canonical: false,
+        },
+    ];
+
+    let env = init_graph(&tx_templates);
+    let txid_b = *env.txid_to_name.get("txB").unwrap();
+
+    let canonical_task = env
+        .tx_graph
+        .canonical_task(chain_tip, env.canonicalization_params);
+    let canonical_txs = local_chain.canonicalize(canonical_task);
+    let canonical_view = local_chain.canonicalize(canonical_txs.view_task(&env.tx_graph));
+
+    let exp_positions = vec![
+        (
+            "txA",
+            ChainPosition::Confirmed {
+                anchor: block_id!(5, "block5"),
+                transitively: Some(txid_b),
+            },
+        ),
+        (
+            "txB",
+            ChainPosition::Confirmed {
+                anchor: block_id!(5, "block5"),
+                transitively: None,
+            },
+        ),
+    ];
+
+    for (tx_name, exp_position) in exp_positions {
+        let txid = *env
+            .txid_to_name
+            .get(tx_name)
+            .expect("txid should exist for tx_name");
+
+        let canonical_position = canonical_view
+            .txs()
+            .find(|ctx| ctx.txid == txid)
+            .expect("expected txid should exist in canonical view")
+            .pos;
+
+        assert_eq!(
+            canonical_position, exp_position,
+            "[{}] canonical position mismatch for {}",
+            scenario, tx_name
+        );
+    }
+}
