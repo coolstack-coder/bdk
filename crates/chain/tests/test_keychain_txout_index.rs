@@ -401,6 +401,58 @@ fn test_scan_with_lookahead() {
     assert!(changeset.is_empty());
 }
 
+// when:
+// - scanning txouts for several (out of order and repeated) indices across two keychains
+// expect:
+// - last used index of each keychain is the highest index that has a txout
+// - indices used by one keychain do not leak into the other keychain's result
+#[test]
+fn test_last_used_index_returns_highest_used_index() {
+    let external_descriptor = parse_descriptor(DESCRIPTORS[0]);
+    let internal_descriptor = parse_descriptor(DESCRIPTORS[1]);
+    let mut txout_index = init_txout_index(
+        external_descriptor.clone(),
+        internal_descriptor.clone(),
+        25,
+        true,
+    );
+
+    assert_eq!(txout_index.last_used_index(TestKeychain::External), None);
+    assert_eq!(txout_index.last_used_index(TestKeychain::Internal), None);
+    assert!(txout_index.last_used_indices().is_empty());
+
+    let used = [
+        (&external_descriptor, 7),
+        (&external_descriptor, 3),
+        (&external_descriptor, 12),
+        (&external_descriptor, 5),
+        (&external_descriptor, 12),
+        (&internal_descriptor, 20),
+        (&internal_descriptor, 1),
+    ];
+    for (vout, (descriptor, index)) in used.iter().enumerate() {
+        let op = OutPoint::new(hash!("last used"), vout as u32);
+        let txout = TxOut {
+            script_pubkey: spk_at_index(descriptor, *index),
+            value: Amount::from_sat(1_000),
+        };
+        let _ = txout_index.index_txout(op, &txout);
+    }
+
+    assert_eq!(
+        txout_index.last_used_index(TestKeychain::External),
+        Some(12)
+    );
+    assert_eq!(
+        txout_index.last_used_index(TestKeychain::Internal),
+        Some(20)
+    );
+    assert_eq!(
+        txout_index.last_used_indices(),
+        [(TestKeychain::External, 12), (TestKeychain::Internal, 20)].into()
+    );
+}
+
 #[test]
 #[rustfmt::skip]
 fn test_wildcard_derivations() {
