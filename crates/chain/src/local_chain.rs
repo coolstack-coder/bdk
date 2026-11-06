@@ -131,7 +131,7 @@ impl LocalChain<BlockHash> {
     /// # let chain = LocalChain::from_blocks([(0, bitcoin::BlockHash::all_zeros())].into_iter().collect()).unwrap();
     /// let chain_tip = chain.tip().block_id();
     /// let task = CanonicalTask::new(&tx_graph, chain_tip, CanonicalParams::default());
-    /// let view = chain.canonicalize(task);
+    /// let canonical_txs = chain.canonicalize(task);
     /// ```
     pub fn canonicalize<Q>(&self, mut task: Q) -> Q::Output
     where

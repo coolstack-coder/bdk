@@ -14,7 +14,8 @@
 //! let chain_tip = chain.tip().block_id();
 //! let params = CanonicalParams::default();
 //! let task = CanonicalTask::new(&tx_graph, chain_tip, params);
-//! let view = chain.canonicalize(task);
+//! let canonical_txs = chain.canonicalize(task);
+//! let view = chain.canonicalize(canonical_txs.view_task(&tx_graph));
 //!
 //! // Iterate over canonical transactions
 //! for tx in view.txs() {
@@ -309,14 +310,13 @@ impl<A, P: Clone> Canonical<A, P> {
     /// # Example
     ///
     /// ```
-    /// # use bdk_chain::{TxGraph, CanonicalTask, local_chain::LocalChain};
+    /// # use bdk_chain::{TxGraph, local_chain::LocalChain};
     /// # use bdk_core::BlockId;
     /// # use bitcoin::hashes::Hash;
     /// # let tx_graph = TxGraph::<BlockId>::default();
     /// # let chain = LocalChain::from_blocks([(0, bitcoin::BlockHash::all_zeros())].into_iter().collect()).unwrap();
     /// # let chain_tip = chain.tip().block_id();
-    /// # let task = CanonicalTask::new(&tx_graph, chain_tip, Default::default());
-    /// # let view = chain.canonicalize(task);
+    /// # let view = chain.canonical_view(&tx_graph, chain_tip, Default::default());
     /// // Iterate over all canonical transactions
     /// for tx in view.txs() {
     ///     println!("TX {}: {:?}", tx.txid, tx.pos);
@@ -344,14 +344,13 @@ impl<A, P: Clone> Canonical<A, P> {
     /// # Example
     ///
     /// ```
-    /// # use bdk_chain::{TxGraph, CanonicalTask, local_chain::LocalChain, keychain_txout::KeychainTxOutIndex};
+    /// # use bdk_chain::{TxGraph, local_chain::LocalChain, keychain_txout::KeychainTxOutIndex};
     /// # use bdk_core::BlockId;
     /// # use bitcoin::hashes::Hash;
     /// # let tx_graph = TxGraph::<BlockId>::default();
     /// # let chain = LocalChain::from_blocks([(0, bitcoin::BlockHash::all_zeros())].into_iter().collect()).unwrap();
     /// # let chain_tip = chain.tip().block_id();
-    /// # let task = CanonicalTask::new(&tx_graph, chain_tip, Default::default());
-    /// # let view = chain.canonicalize(task);
+    /// # let view = chain.canonical_view(&tx_graph, chain_tip, Default::default());
     /// # let indexer = KeychainTxOutIndex::<&str>::default();
     /// // Get all outputs from an indexer
     /// for (keychain, txout) in view.filter_outpoints(indexer.outpoints().clone()) {
@@ -375,14 +374,13 @@ impl<A, P: Clone> Canonical<A, P> {
     /// # Example
     ///
     /// ```
-    /// # use bdk_chain::{TxGraph, CanonicalTask, local_chain::LocalChain, keychain_txout::KeychainTxOutIndex};
+    /// # use bdk_chain::{TxGraph, local_chain::LocalChain, keychain_txout::KeychainTxOutIndex};
     /// # use bdk_core::BlockId;
     /// # use bitcoin::hashes::Hash;
     /// # let tx_graph = TxGraph::<BlockId>::default();
     /// # let chain = LocalChain::from_blocks([(0, bitcoin::BlockHash::all_zeros())].into_iter().collect()).unwrap();
     /// # let chain_tip = chain.tip().block_id();
-    /// # let task = CanonicalTask::new(&tx_graph, chain_tip, Default::default());
-    /// # let view = chain.canonicalize(task);
+    /// # let view = chain.canonical_view(&tx_graph, chain_tip, Default::default());
     /// # let indexer = KeychainTxOutIndex::<&str>::default();
     /// // Get unspent outputs (UTXOs) from an indexer
     /// for (keychain, utxo) in view.filter_unspent_outpoints(indexer.outpoints().clone()) {
