@@ -117,10 +117,10 @@ impl<E: ElectrumApi> BdkElectrumClient<E> {
     ///   [`CalculateFeeError::MissingTxOut`] error if those `TxOut`s are not present in the
     ///   transaction graph.
     ///
-    /// [`bdk_chain`]: ../bdk_chain/index.html
-    /// [`CalculateFeeError::MissingTxOut`]: ../bdk_chain/tx_graph/enum.CalculateFeeError.html#variant.MissingTxOut
-    /// [`Wallet.calculate_fee`]: ../bdk_wallet/struct.Wallet.html#method.calculate_fee
-    /// [`Wallet.calculate_fee_rate`]: ../bdk_wallet/struct.Wallet.html#method.calculate_fee_rate
+    /// [`bdk_chain`]: https://docs.rs/bdk_chain/latest/bdk_chain/
+    /// [`CalculateFeeError::MissingTxOut`]: https://docs.rs/bdk_chain/latest/bdk_chain/tx_graph/enum.CalculateFeeError.html#variant.MissingTxOut
+    /// [`Wallet.calculate_fee`]: https://docs.rs/bdk_wallet/latest/bdk_wallet/struct.Wallet.html#method.calculate_fee
+    /// [`Wallet.calculate_fee_rate`]: https://docs.rs/bdk_wallet/latest/bdk_wallet/struct.Wallet.html#method.calculate_fee_rate
     pub fn full_scan<K: Ord + Clone>(
         &self,
         request: impl Into<FullScanRequest<K>>,
@@ -207,10 +207,10 @@ impl<E: ElectrumApi> BdkElectrumClient<E> {
     /// may include scripts that have been used, use [`full_scan`] with the keychain.
     ///
     /// [`full_scan`]: Self::full_scan
-    /// [`bdk_chain`]: ../bdk_chain/index.html
-    /// [`CalculateFeeError::MissingTxOut`]: ../bdk_chain/tx_graph/enum.CalculateFeeError.html#variant.MissingTxOut
-    /// [`Wallet.calculate_fee`]: ../bdk_wallet/struct.Wallet.html#method.calculate_fee
-    /// [`Wallet.calculate_fee_rate`]: ../bdk_wallet/struct.Wallet.html#method.calculate_fee_rate
+    /// [`bdk_chain`]: https://docs.rs/bdk_chain/latest/bdk_chain/
+    /// [`CalculateFeeError::MissingTxOut`]: https://docs.rs/bdk_chain/latest/bdk_chain/tx_graph/enum.CalculateFeeError.html#variant.MissingTxOut
+    /// [`Wallet.calculate_fee`]: https://docs.rs/bdk_wallet/latest/bdk_wallet/struct.Wallet.html#method.calculate_fee
+    /// [`Wallet.calculate_fee_rate`]: https://docs.rs/bdk_wallet/latest/bdk_wallet/struct.Wallet.html#method.calculate_fee_rate
     pub fn sync<I: 'static>(
         &self,
         request: impl Into<SyncRequest<I>>,

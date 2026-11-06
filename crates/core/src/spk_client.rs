@@ -126,7 +126,7 @@ impl SyncRequestBuilder<()> {
 impl<I, D> SyncRequestBuilder<I, D> {
     /// Set the initial chain tip for the sync request.
     ///
-    /// This is used to update [`LocalChain`](../../bdk_chain/local_chain/struct.LocalChain.html).
+    /// This is used to update [`LocalChain`](https://docs.rs/bdk_chain/latest/bdk_chain/local_chain/struct.LocalChain.html).
     pub fn chain_tip(mut self, cp: CheckPoint<D>) -> Self {
         self.inner.chain_tip = Some(cp);
         self
@@ -481,7 +481,7 @@ pub struct FullScanRequestBuilder<K, D = BlockHash> {
 impl<K: Ord, D> FullScanRequestBuilder<K, D> {
     /// Set the initial chain tip for the full scan request.
     ///
-    /// This is used to update [`LocalChain`](../../bdk_chain/local_chain/struct.LocalChain.html).
+    /// This is used to update [`LocalChain`](https://docs.rs/bdk_chain/latest/bdk_chain/local_chain/struct.LocalChain.html).
     pub fn chain_tip(mut self, tip: CheckPoint<D>) -> Self {
         self.inner.chain_tip = Some(tip);
         self
