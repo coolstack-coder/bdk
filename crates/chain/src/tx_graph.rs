@@ -21,16 +21,39 @@
 //! Conflicting transactions are allowed to coexist within a [`TxGraph`]. A process called
 //! canonicalization is required to get a conflict-free view of transactions.
 //!
-//! The canonicalization process uses a two-step, sans-IO approach:
+//! The canonicalization process uses a sans-IO approach made up of two tasks. Each task is driven
+//! by a chain oracle (such as [`LocalChain`](crate::local_chain::LocalChain)), which answers the
+//! task's anchor verification queries:
 //!
-//! 1. **Create a canonicalization task** using [`canonical_task`]: ```ignore let task =
-//!    tx_graph.canonical_task(params);```This creates a [`CanonicalTask`] that encapsulates the
-//!    canonicalization logic without performing any I/O operations.
+//! 1. **Determine the canonical transactions.** [`canonical_task`] creates a [`CanonicalTask`] for
+//!    a given chain tip and [`CanonicalParams`]. Running it with
+//!    [`LocalChain::canonicalize`](crate::local_chain::LocalChain::canonicalize) returns
+//!    [`CanonicalTxs`]: the conflict-free set of transactions, each paired with the
+//!    [`CanonicalReason`](crate::CanonicalReason) it was included for.
+//! 2. **Resolve chain positions.** [`CanonicalTxs::view_task`] turns that set into a
+//!    [`CanonicalViewTask`]. Running it with the same chain oracle returns a [`CanonicalView`], in
+//!    which every transaction has a resolved [`ChainPosition`](crate::ChainPosition).
 //!
-//! 2. **Execute the task** with a chain oracle to obtain a [`CanonicalView`]: ```ignore let view =
-//!    chain.canonicalize(task); ``` The chain oracle (such as
-//!    [`LocalChain`](crate::local_chain::LocalChain)) handles all anchor verification queries from
-//!    the task.
+//! [`LocalChain::canonical_view`](crate::local_chain::LocalChain::canonical_view) runs both steps
+//! in a single call.
+//!
+//! ```
+//! # use bdk_chain::{local_chain::LocalChain, BlockId, CanonicalParams, TxGraph};
+//! # use bitcoin::{hashes::Hash, BlockHash};
+//! # let tx_graph = TxGraph::<BlockId>::default();
+//! # let chain = LocalChain::from_blocks([(0, BlockHash::all_zeros())].into_iter().collect()).unwrap();
+//! let chain_tip = chain.tip().block_id();
+//!
+//! // Step 1: determine which transactions are canonical.
+//! let task = tx_graph.canonical_task(chain_tip, CanonicalParams::default());
+//! let canonical_txs = chain.canonicalize(task);
+//!
+//! // Step 2: resolve the chain position of each canonical transaction.
+//! let view = chain.canonicalize(canonical_txs.view_task(&tx_graph));
+//!
+//! // Or run both steps at once.
+//! let same_view = chain.canonical_view(&tx_graph, chain_tip, CanonicalParams::default());
+//! ```
 //!
 //! The [`CanonicalView`] provides a complete canonical view of the graph. This is required for
 //! typical wallet operations like querying balances, listing outputs, transactions, and UTXOs.
@@ -127,6 +150,10 @@
 //! [`insert_txout`]: TxGraph::insert_txout
 //! [`CanonicalView`]: crate::CanonicalView
 //! [`canonical_task`]: TxGraph::canonical_task
+//! [`CanonicalTxs`]: crate::CanonicalTxs
+//! [`CanonicalTxs::view_task`]: crate::CanonicalTxs::view_task
+//! [`CanonicalViewTask`]: crate::CanonicalViewTask
+//! [`CanonicalParams`]: crate::CanonicalParams
 
 use crate::collections::*;
 use crate::CanonicalParams;
