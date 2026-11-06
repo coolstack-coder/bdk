@@ -1093,10 +1093,11 @@ impl<A> ChangeSet<A> {
         self.txs
             .iter()
             .flat_map(|tx| {
+                let txid = tx.compute_txid();
                 tx.output
                     .iter()
                     .enumerate()
-                    .map(move |(vout, txout)| (OutPoint::new(tx.compute_txid(), vout as _), txout))
+                    .map(move |(vout, txout)| (OutPoint::new(txid, vout as _), txout))
             })
             .chain(self.txouts.iter().map(|(op, txout)| (*op, txout)))
     }
