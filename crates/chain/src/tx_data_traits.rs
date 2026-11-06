@@ -14,20 +14,24 @@ use crate::{BlockId, ConfirmationBlockTime};
 /// ```
 /// # use bdk_chain::local_chain::LocalChain;
 /// # use bdk_chain::tx_graph::TxGraph;
+/// # use bdk_chain::Anchor;
 /// # use bdk_chain::BlockId;
 /// # use bdk_chain::ConfirmationBlockTime;
 /// # use bdk_chain::example_utils::*;
 /// # use bitcoin::hashes::Hash;
 /// # use bitcoin::BlockHash;
-/// // Initialize the local chain with two blocks.
+/// // Initialize the local chain with a genesis block and two more blocks.
 /// let chain = LocalChain::<BlockHash>::from_blocks(
 ///     [
+///         (0, Hash::hash("genesis".as_bytes())),
 ///         (1, Hash::hash("first".as_bytes())),
 ///         (2, Hash::hash("second".as_bytes())),
 ///     ]
 ///     .into_iter()
 ///     .collect(),
-/// );
+/// )
+/// .expect("blocks must include genesis");
+/// let chain_tip = chain.tip().block_id();
 ///
 /// // Transaction to be inserted into `TxGraph`s with different anchor types.
 /// let tx = tx_from_hex(RAW_TX_1);
@@ -37,13 +41,11 @@ use crate::{BlockId, ConfirmationBlockTime};
 /// // the transaction is the same block.
 /// let mut graph_a = TxGraph::<BlockId>::default();
 /// let _ = graph_a.insert_tx(tx.clone());
-/// graph_a.insert_anchor(
-///     tx.compute_txid(),
-///     BlockId {
-///         height: 1,
-///         hash: Hash::hash("first".as_bytes()),
-///     },
-/// );
+/// let anchor_a = BlockId {
+///     height: 1,
+///     hash: Hash::hash("first".as_bytes()),
+/// };
+/// graph_a.insert_anchor(tx.compute_txid(), anchor_a);
 ///
 /// // Insert `tx` into a `TxGraph` that uses `ConfirmationBlockTime` as the anchor type.
 /// // This anchor records the anchor block and the confirmation time of the transaction. When a
@@ -51,15 +53,23 @@ use crate::{BlockId, ConfirmationBlockTime};
 /// // of the transaction is the same block.
 /// let mut graph_c = TxGraph::<ConfirmationBlockTime>::default();
 /// let _ = graph_c.insert_tx(tx.clone());
-/// graph_c.insert_anchor(
-///     tx.compute_txid(),
-///     ConfirmationBlockTime {
-///         block_id: BlockId {
-///             height: 2,
-///             hash: Hash::hash("third".as_bytes()),
-///         },
-///         confirmation_time: 123,
+/// let anchor_c = ConfirmationBlockTime {
+///     block_id: BlockId {
+///         height: 2,
+///         hash: Hash::hash("second".as_bytes()),
 ///     },
+///     confirmation_time: 123,
+/// };
+/// graph_c.insert_anchor(tx.compute_txid(), anchor_c);
+///
+/// // Both anchor blocks are in the best chain, so `tx` is confirmed in the best chain.
+/// assert_eq!(
+///     chain.is_block_in_chain(anchor_a.anchor_block(), chain_tip),
+///     Some(true)
+/// );
+/// assert_eq!(
+///     chain.is_block_in_chain(anchor_c.anchor_block(), chain_tip),
+///     Some(true)
 /// );
 /// ```
 pub trait Anchor: core::fmt::Debug + Clone + Eq + PartialOrd + Ord + core::hash::Hash {
