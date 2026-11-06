@@ -968,7 +968,9 @@ impl<K: Clone + Ord + Debug> KeychainTxOutIndex<K> {
     /// Returns the highest derivation index of the `keychain` where [`KeychainTxOutIndex`] has
     /// found a [`TxOut`] with it's script pubkey.
     pub fn last_used_index(&self, keychain: K) -> Option<u32> {
-        self.keychain_outpoints(keychain).last().map(|(i, _)| i)
+        self.keychain_outpoints(keychain)
+            .next_back()
+            .map(|(i, _)| i)
     }
 
     /// Returns the highest derivation index of each keychain that [`KeychainTxOutIndex`] has found
