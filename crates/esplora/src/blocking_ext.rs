@@ -214,7 +214,7 @@ fn fetch_block(
     Ok(Some(client.get_block_hash(height)?))
 }
 
-/// Create the [`local_chain::Update`].
+/// Create the chain update: the new [`CheckPoint`] tip to apply to the local chain.
 ///
 /// We want to have a corresponding checkpoint per anchor height. However, checkpoints fetched
 /// should not surpass `latest_blocks`.
@@ -371,9 +371,9 @@ fn fetch_txs_with_keychain_spks<I: Iterator<Item = Indexed<SpkWithExpectedTxids>
 /// Fetch transactions and associated [`ConfirmationBlockTime`]s by scanning `spks`
 /// against Esplora.
 ///
-/// Unlike with [`EsploraExt::fetch_txs_with_keychain_spks`], `spks` must be *bounded* as all
-/// contained scripts will be scanned. `parallel_requests` specifies the maximum number of HTTP
-/// requests to make in parallel.
+/// Unlike with [`fetch_txs_with_keychain_spks`], `spks` must be *bounded* as all contained
+/// scripts will be scanned. `parallel_requests` specifies the maximum number of HTTP requests to
+/// make in parallel.
 ///
 /// Refer to [crate-level docs](crate) for more.
 fn fetch_txs_with_spks<I: IntoIterator<Item = SpkWithExpectedTxids>>(

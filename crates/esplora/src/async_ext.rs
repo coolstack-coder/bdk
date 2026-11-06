@@ -229,7 +229,7 @@ async fn fetch_block<S: Sleeper>(
     Ok(Some(client.get_block_hash(height).await?))
 }
 
-/// Create the [`local_chain::Update`].
+/// Create the chain update: the new [`CheckPoint`] tip to apply to the local chain.
 ///
 /// We want to have a corresponding checkpoint per anchor height. However, checkpoints fetched
 /// should not surpass `latest_blocks`.
@@ -298,12 +298,12 @@ async fn chain_update<S: Sleeper>(
 /// Fetch transactions and associated [`ConfirmationBlockTime`]s by scanning
 /// `keychain_spks` against Esplora.
 ///
-/// `keychain_spks` is an *unbounded* indexed-[`ScriptBuf`] iterator that represents scripts
-/// derived from a keychain. The scanning logic stops after a `stop_gap` number of consecutive
-/// scripts with no transaction history is reached. `parallel_requests` specifies the maximum
-/// number of HTTP requests to make in parallel.
+/// `keychain_spks` is an *unbounded* indexed-[`SpkWithExpectedTxids`] iterator that represents
+/// scripts derived from a keychain. The scanning logic stops after a `stop_gap` number of
+/// consecutive scripts with no transaction history is reached. `parallel_requests` specifies the
+/// maximum number of HTTP requests to make in parallel.
 ///
-/// A [`TxGraph`] (containing the fetched transactions and anchors) and the last active
+/// A [`TxUpdate`] (containing the fetched transactions and anchors) and the last active
 /// keychain index (if any) is returned. The last active keychain index is the keychain's last
 /// script pubkey that contains a non-empty transaction history.
 ///
@@ -402,9 +402,9 @@ where
 /// Fetch transactions and associated [`ConfirmationBlockTime`]s by scanning `spks`
 /// against Esplora.
 ///
-/// Unlike with [`EsploraAsyncExt::fetch_txs_with_keychain_spks`], `spks` must be *bounded* as
-/// all contained scripts will be scanned. `parallel_requests` specifies the maximum number of
-/// HTTP requests to make in parallel.
+/// Unlike with [`fetch_txs_with_keychain_spks`], `spks` must be *bounded* as all contained
+/// scripts will be scanned. `parallel_requests` specifies the maximum number of HTTP requests to
+/// make in parallel.
 ///
 /// Refer to [crate-level docs](crate) for more.
 async fn fetch_txs_with_spks<I, S>(
