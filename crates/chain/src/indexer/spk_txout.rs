@@ -408,14 +408,17 @@ impl<I: Clone + Ord + core::fmt::Debug> SpkTxOutIndex<I> {
         &'a self,
         tx: &'a Transaction,
     ) -> impl Iterator<Item = CreatedTxOut<I>> + 'a {
+        // Computing the txid hashes the whole transaction, so only do it once, and only if at
+        // least one output is ours.
+        let mut txid = None;
         tx.output
             .iter()
             .enumerate()
-            .filter_map(|(output_index, txout)| {
-                self.index_of_spk(txout.script_pubkey.clone())
+            .filter_map(move |(output_index, txout)| {
+                self.index_of_spk(&txout.script_pubkey)
                     .map(|index| CreatedTxOut {
                         outpoint: OutPoint {
-                            txid: tx.compute_txid(),
+                            txid: *txid.get_or_insert_with(|| tx.compute_txid()),
                             vout: u32::try_from(output_index).expect("invalid output index"),
                         },
                         txout: txout.clone(),
