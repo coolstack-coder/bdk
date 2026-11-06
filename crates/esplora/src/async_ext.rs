@@ -200,7 +200,7 @@ async fn fetch_latest_blocks<S: Sleeper>(
         .collect())
 }
 
-/// Used instead of [`esplora_client::BlockingClient::get_block_hash`].
+/// Used instead of [`esplora_client::AsyncClient::get_block_hash`].
 ///
 /// This first checks the previously fetched `latest_blocks` before fetching from Esplora again.
 async fn fetch_block<S: Sleeper>(
